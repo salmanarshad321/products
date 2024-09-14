@@ -24,6 +24,18 @@
       position: relative;
     }
 
+    .toggle-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: transparent;
+      color: #fff;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      z-index: 1001; /* Ensures the toggle button stays on top */
+    }
+
     /* Sidebar */
     .sidebar {
       background-color: #000;
@@ -36,21 +48,11 @@
       padding-top: 60px; /* To align below header */
       transition: left 0.3s ease;
       overflow-y: auto;
+      z-index: 1000; /* Ensures it stays behind the toggle button */
     }
 
     .sidebar.active {
       left: 0;
-    }
-
-    .toggle-btn {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background-color: transparent;
-      color: #fff;
-      border: none;
-      font-size: 1.5em;
-      cursor: pointer;
     }
 
     /* Main Content */
@@ -79,6 +81,7 @@
       align-items: center;
       padding: 1em;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: pointer;
     }
 
     .product-item img {
@@ -169,6 +172,15 @@
       .sidebar.active ~ .main-content {
         margin-left: 0;
       }
+
+      .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .product-item img {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -189,8 +201,8 @@
     <!-- Main Content -->
     <div class="main-content">
       <div class="product-list">
-        <div class="product-item" v-for="product in products" :key="product.id">
-          <input type="checkbox" v-model="selectedProducts" :value="product">
+        <div class="product-item" v-for="product in products" :key="product.id" @click="toggleProduct(product)">
+          <input type="checkbox" v-model="selectedProducts" :value="product" style="display:none">
           <img :src="product.image" :alt="product.name">
           <div class="product-details">
             <h2 class="product-title">{{ product.name }}</h2>
@@ -262,6 +274,13 @@
         toggleSidebar() {
           this.isSidebarActive = !this.isSidebarActive;
         },
+        toggleProduct(product) {
+          if (this.selectedProducts.includes(product)) {
+            this.selectedProducts = this.selectedProducts.filter(p => p.id !== product.id);
+          } else {
+            this.selectedProducts.push(product);
+          }
+        },
         openPreview() {
           this.showModal = true;
         },
@@ -271,27 +290,4 @@
         printSelected() {
           const printWindow = window.open('', '', 'height=600,width=800');
           printWindow.document.write('<html><head><title>Print Products</title>');
-          printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">');
-          printWindow.document.write('<style>');
-          printWindow.document.write('body { font-family: "Inter", sans-serif; margin: 20px; text-align: center; }');
-          printWindow.document.write('.product { margin-bottom: 2em; }');
-          printWindow.document.write('.product img { max-width: 100%; height: auto; }');
-          printWindow.document.write('</style>');
-          printWindow.document.write('</head><body>');
-          this.selectedProducts.forEach(product => {
-            printWindow.document.write('<div class="product">');
-            printWindow.document.write(`<h1>${product.name}</h1>`);
-            printWindow.document.write(`<img src="${product.image}" alt="${product.name}">`);
-            printWindow.document.write(`<p>${product.description}</p>`);
-            printWindow.document.write('</div>');
-          });
-          printWindow.document.write('</body></html>');
-          printWindow.document.close();
-          printWindow.print();
-          this.closePreview();
-        }
-      }
-    });
-  </script>
-</body>
-</html>
+          printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
