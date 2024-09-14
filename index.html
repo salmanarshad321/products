@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Product Grid</title>
+  <title>Product List</title>
   <!-- Include Inter font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
   <!-- Include Vue.js CDN -->
@@ -64,51 +64,88 @@
       margin-left: 200px;
     }
 
-    /* Grid of cards */
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    /* Product List */
+    .product-list {
+      display: flex;
+      flex-direction: column;
       gap: 1em;
     }
 
-    .card {
+    .product-item {
       background-color: #fff;
       border-radius: 5px;
       overflow: hidden;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       display: flex;
-      flex-direction: column;
-    }
-
-    .card img {
-      width: 100%;
-      height: auto;
-    }
-
-    .card-content {
+      align-items: center;
       padding: 1em;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .product-item img {
+      width: 100px;
+      height: auto;
+      margin-right: 1em;
+      border-radius: 5px;
+    }
+
+    .product-details {
       flex-grow: 1;
     }
 
-    .card-title {
+    .product-title {
       font-size: 1.2em;
       margin: 0 0 0.5em 0;
     }
 
-    .card-description {
+    .product-description {
       font-size: 0.9em;
       color: #555;
     }
 
-    .card-button {
+    .print-button {
       background-color: #000;
       color: #fff;
       border: none;
       padding: 0.5em 1em;
-      margin: 1em;
+      margin-top: 1em;
       border-radius: 5px;
       cursor: pointer;
       align-self: flex-start;
+    }
+
+    /* Preview Modal */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 2em;
+      border: 1px solid #888;
+      width: 80%;
+      border-radius: 5px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-btn {
+      background-color: transparent;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
     }
 
     /* Responsive */
@@ -116,7 +153,12 @@
       .sidebar {
         width: 100%;
         height: auto;
-        position: relative;
+        position: fixed;
+        left: -100%;
+        padding-top: 60px;
+      }
+
+      .sidebar.active {
         left: 0;
       }
 
@@ -135,7 +177,7 @@
     <!-- Header -->
     <div class="header">
       <button class="toggle-btn" @click="toggleSidebar">☰</button>
-      <h1>Product Grid</h1>
+      <h1>Product List</h1>
     </div>
 
     <!-- Sidebar -->
@@ -146,15 +188,36 @@
 
     <!-- Main Content -->
     <div class="main-content">
-      <div class="product-grid">
-        <div class="card" v-for="product in products" :key="product.id">
+      <div class="product-list">
+        <div class="product-item" v-for="product in products" :key="product.id">
+          <input type="checkbox" v-model="selectedProducts" :value="product">
           <img :src="product.image" :alt="product.name">
-          <div class="card-content">
-            <h2 class="card-title">{{ product.name }}</h2>
-            <p class="card-description">{{ product.description }}</p>
+          <div class="product-details">
+            <h2 class="product-title">{{ product.name }}</h2>
+            <p class="product-description">{{ product.description }}</p>
           </div>
-          <button class="card-button" @click="printProduct(product)">Print</button>
         </div>
+      </div>
+      <button class="print-button" @click="openPreview" :disabled="selectedProducts.length === 0">
+        Print Selected Products
+      </button>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal" v-if="showModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Print Preview</h2>
+          <button class="close-btn" @click="closePreview">&times;</button>
+        </div>
+        <div class="preview-content">
+          <div v-for="product in selectedProducts" :key="product.id" style="margin-bottom: 2em; text-align: center;">
+            <h3>{{ product.name }}</h3>
+            <img :src="product.image" :alt="product.name" style="max-width: 100%; height: auto;">
+            <p>{{ product.description }}</p>
+          </div>
+        </div>
+        <button class="print-button" @click="printSelected">Confirm and Print</button>
       </div>
     </div>
   </div>
@@ -165,30 +228,32 @@
       el: '#app',
       data: {
         isSidebarActive: false,
+        showModal: false,
+        selectedProducts: [],
         products: [
           {
             id: 1,
             name: 'Product 1',
             description: 'This is a description of product 1.',
-            image: 'https://via.placeholder.com/250x150'
+            image: 'https://via.placeholder.com/100x100'
           },
           {
             id: 2,
             name: 'Product 2',
             description: 'This is a description of product 2.',
-            image: 'https://via.placeholder.com/250x150'
+            image: 'https://via.placeholder.com/100x100'
           },
           {
             id: 3,
             name: 'Product 3',
             description: 'This is a description of product 3.',
-            image: 'https://via.placeholder.com/250x150'
+            image: 'https://via.placeholder.com/100x100'
           },
           {
             id: 4,
             name: 'Product 4',
             description: 'This is a description of product 4.',
-            image: 'https://via.placeholder.com/250x150'
+            image: 'https://via.placeholder.com/100x100'
           }
           // Add more products as needed
         ]
@@ -197,24 +262,33 @@
         toggleSidebar() {
           this.isSidebarActive = !this.isSidebarActive;
         },
-        printProduct(product) {
+        openPreview() {
+          this.showModal = true;
+        },
+        closePreview() {
+          this.showModal = false;
+        },
+        printSelected() {
           const printWindow = window.open('', '', 'height=600,width=800');
-          printWindow.document.write('<html><head><title>Print Product</title>');
+          printWindow.document.write('<html><head><title>Print Products</title>');
           printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">');
           printWindow.document.write('<style>');
           printWindow.document.write('body { font-family: "Inter", sans-serif; margin: 20px; text-align: center; }');
-          printWindow.document.write('.product { }');
+          printWindow.document.write('.product { margin-bottom: 2em; }');
           printWindow.document.write('.product img { max-width: 100%; height: auto; }');
           printWindow.document.write('</style>');
           printWindow.document.write('</head><body>');
-          printWindow.document.write('<div class="product">');
-          printWindow.document.write(`<h1>${product.name}</h1>`);
-          printWindow.document.write(`<img src="${product.image}" alt="${product.name}">`);
-          printWindow.document.write(`<p>${product.description}</p>`);
-          printWindow.document.write('</div>');
+          this.selectedProducts.forEach(product => {
+            printWindow.document.write('<div class="product">');
+            printWindow.document.write(`<h1>${product.name}</h1>`);
+            printWindow.document.write(`<img src="${product.image}" alt="${product.name}">`);
+            printWindow.document.write(`<p>${product.description}</p>`);
+            printWindow.document.write('</div>');
+          });
           printWindow.document.write('</body></html>');
           printWindow.document.close();
           printWindow.print();
+          this.closePreview();
         }
       }
     });
