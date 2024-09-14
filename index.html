@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Grid</title>
+  <!-- Include Inter font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+  <!-- Include Vue.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <!-- Include CSS -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #f0f0f0; /* Subtle grey background */
+    }
+
+    /* Header */
+    .header {
+      background-color: #000;
+      color: #fff;
+      padding: 1em;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background-color: #000;
+      color: #fff;
+      width: 200px;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: -200px;
+      padding-top: 60px; /* To align below header */
+      transition: left 0.3s ease;
+      overflow-y: auto;
+    }
+
+    .sidebar.active {
+      left: 0;
+    }
+
+    .toggle-btn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background-color: transparent;
+      color: #fff;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 0;
+      padding: 1em;
+      transition: margin-left 0.3s ease;
+    }
+
+    .sidebar.active ~ .main-content {
+      margin-left: 200px;
+    }
+
+    /* Grid of cards */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1em;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 5px;
+      overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+    }
+
+    .card-content {
+      padding: 1em;
+      flex-grow: 1;
+    }
+
+    .card-title {
+      font-size: 1.2em;
+      margin: 0 0 0.5em 0;
+    }
+
+    .card-description {
+      font-size: 0.9em;
+      color: #555;
+    }
+
+    .card-button {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 0.5em 1em;
+      margin: 1em;
+      border-radius: 5px;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        left: 0;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .sidebar.active ~ .main-content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <div class="header">
+      <button class="toggle-btn" @click="toggleSidebar">☰</button>
+      <h1>Product Grid</h1>
+    </div>
+
+    <!-- Sidebar -->
+    <div :class="['sidebar', { 'active': isSidebarActive }]">
+      <!-- Sidebar content -->
+      <p style="padding: 1em;">Sidebar content here</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="product-grid">
+        <div class="card" v-for="product in products" :key="product.id">
+          <img :src="product.image" :alt="product.name">
+          <div class="card-content">
+            <h2 class="card-title">{{ product.name }}</h2>
+            <p class="card-description">{{ product.description }}</p>
+          </div>
+          <button class="card-button" @click="printProduct(product)">Print</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vue Script -->
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        isSidebarActive: false,
+        products: [
+          {
+            id: 1,
+            name: 'Product 1',
+            description: 'This is a description of product 1.',
+            image: 'https://via.placeholder.com/250x150'
+          },
+          {
+            id: 2,
+            name: 'Product 2',
+            description: 'This is a description of product 2.',
+            image: 'https://via.placeholder.com/250x150'
+          },
+          {
+            id: 3,
+            name: 'Product 3',
+            description: 'This is a description of product 3.',
+            image: 'https://via.placeholder.com/250x150'
+          },
+          {
+            id: 4,
+            name: 'Product 4',
+            description: 'This is a description of product 4.',
+            image: 'https://via.placeholder.com/250x150'
+          }
+          // Add more products as needed
+        ]
+      },
+      methods: {
+        toggleSidebar() {
+          this.isSidebarActive = !this.isSidebarActive;
+        },
+        printProduct(product) {
+          const printWindow = window.open('', '', 'height=600,width=800');
+          printWindow.document.write('<html><head><title>Print Product</title>');
+          printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">');
+          printWindow.document.write('<style>');
+          printWindow.document.write('body { font-family: "Inter", sans-serif; margin: 20px; text-align: center; }');
+          printWindow.document.write('.product { }');
+          printWindow.document.write('.product img { max-width: 100%; height: auto; }');
+          printWindow.document.write('</style>');
+          printWindow.document.write('</head><body>');
+          printWindow.document.write('<div class="product">');
+          printWindow.document.write(`<h1>${product.name}</h1>`);
+          printWindow.document.write(`<img src="${product.image}" alt="${product.name}">`);
+          printWindow.document.write(`<p>${product.description}</p>`);
+          printWindow.document.write('</div>');
+          printWindow.document.write('</body></html>');
+          printWindow.document.close();
+          printWindow.print();
+        }
+      }
+    });
+  </script>
+</body>
+</html>
