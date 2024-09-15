@@ -1,279 +1,414 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Product List</title>
   <!-- Include Inter font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
-  <!-- Include Vue.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
-  <!-- Include CSS -->
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: #f0f0f0; /* Subtle grey background */
-    }
-
-    /* Header */
-    .header {
-      background-color: #000;
-      color: #fff;
-      padding: 1em;
-      text-align: center;
-      position: relative;
-    }
-
-    .toggle-btn {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background-color: transparent;
-      color: #fff;
-      border: none;
-      font-size: 1.5em;
-      cursor: pointer;
-      z-index: 1001; /* Ensures the toggle button stays on top */
-    }
-
-    /* Sidebar */
-    .sidebar {
-      background-color: #000;
-      color: #fff;
-      width: 200px;
-      height: 100vh;
-      position: fixed;
-      top: 0;
-      left: -200px;
-      padding-top: 60px; /* To align below header */
-      transition: left 0.3s ease;
-      overflow-y: auto;
-      z-index: 1000; /* Ensures it stays behind the toggle button */
-    }
-
-    .sidebar.active {
-      left: 0;
-    }
-
-    /* Main Content */
-    .main-content {
-      margin-left: 0;
-      padding: 1em;
-      transition: margin-left 0.3s ease;
-    }
-
-    .sidebar.active ~ .main-content {
-      margin-left: 200px;
-    }
-
-    /* Product List */
-    .product-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1em;
-    }
-
-    .product-item {
-      background-color: #fff;
-      border-radius: 5px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      padding: 1em;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      cursor: pointer;
-    }
-
-    .product-item img {
-      width: 100px;
-      height: auto;
-      margin-right: 1em;
-      border-radius: 5px;
-    }
-
-    .product-details {
-      flex-grow: 1;
-    }
-
-    .product-title {
-      font-size: 1.2em;
-      margin: 0 0 0.5em 0;
-    }
-
-    .product-description {
-      font-size: 0.9em;
-      color: #555;
-    }
-
-    .print-button {
-      background-color: #000;
-      color: #fff;
-      border: none;
-      padding: 0.5em 1em;
-      margin-top: 1em;
-      border-radius: 5px;
-      cursor: pointer;
-      align-self: flex-start;
-    }
-
-    /* Preview Modal */
-    .modal {
-      display: none; /* Hidden by default */
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.5); /* Black w/ opacity */
-    }
-
-    .modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 2em;
-      border: 1px solid #888;
-      width: 80%;
-      border-radius: 5px;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .close-btn {
-      background-color: transparent;
-      border: none;
-      font-size: 1.5em;
-      cursor: pointer;
-    }
-
-    /* Responsive */
-    @media (max-width: 600px) {
-      .sidebar {
-        width: 100%;
-        height: auto;
-        position: fixed;
-        left: -100%;
-        padding-top: 60px;
-      }
-
-      .sidebar.active {
-        left: 0;
-      }
-
-      .main-content {
-        margin-left: 0;
-      }
-
-      .sidebar.active ~ .main-content {
-        margin-left: 0;
-      }
-
-      .product-item {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .product-item img {
-        width: 100%;
-      }
-    }
-  </style>
+  <!-- Include Vue.js 3 CDN -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- Include Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
   <div id="app">
     <!-- Header -->
-    <div class="header">
-      <button class="toggle-btn" @click="toggleSidebar">☰</button>
-      <h1>Product List</h1>
-    </div>
-
-    <!-- Sidebar -->
-    <div :class="['sidebar', { 'active': isSidebarActive }]">
-      <!-- Sidebar content -->
-      <p style="padding: 1em;">Sidebar content here</p>
+    <div class="bg-black text-white p-4 text-center relative">
+      <h1 class="text-2xl font-bold">Product List</h1>
     </div>
 
     <!-- Main Content -->
-    <div class="main-content">
-      <div class="product-list">
-        <div class="product-item" v-for="product in products" :key="product.id" @click="toggleProduct(product)">
-          <input type="checkbox" v-model="selectedProducts" :value="product" style="display:none">
-          <img :src="product.image" :alt="product.name">
-          <div class="product-details">
-            <h2 class="product-title">{{ product.name }}</h2>
-            <p class="product-description">{{ product.description }}</p>
+    <div class="p-6 transition-all">
+      <button class="mb-4 bg-black text-white px-4 py-2 mt-4 rounded hover:bg-gray-800 disabled:bg-gray-400"
+        @click="openPreview" :disabled="selectedProducts.length === 0">
+        Print Selected Products
+      </button>
+
+      <div class="my-2 space-y-4">
+        <div v-for="(groupProducts, group) in groupedProducts" :key="group">
+          <h2 class="text-xl font-bold mb-2">{{ group }}</h2>
+          <div v-for="product in groupProducts" :key="product.id" @click="toggleProduct(product)"
+            :class="['bg-gray-100 p-4 rounded-sm shadow-sm flex items-center cursor-pointer transition-all border-[1px] border-[#e2e2e2]', { 'bg-gray-700 text-white': selectedProducts.includes(product) }]">
+            <input type="checkbox" v-model="selectedProducts" :value="product"
+              class="accent-white form-checkbox h-6 w-6 text-black mr-4" />
+            <!-- <img :src="product.image" :alt="product.name" class="w-16 h-16 object-cover rounded mr-4"> -->
+            <div class="product-details">
+              <h2 class="text-lg font-bold">{{ product.name }}</h2>
+              <!-- <p class="text-gray-600" :class="{ 'text-white': selectedProducts.includes(product) }">{{
+                product.description }}</p> -->
+            </div>
           </div>
         </div>
       </div>
-      <button class="print-button" @click="openPreview" :disabled="selectedProducts.length === 0">
-        Print Selected Products
-      </button>
     </div>
 
     <!-- Preview Modal -->
-    <div class="modal" v-if="showModal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Print Preview</h2>
-          <button class="close-btn" @click="closePreview">&times;</button>
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+      <div class="bg-white p-6 rounded-lg w-3/4 max-w-3xl">
+        <div class="flex justify-between items-start mb-4 border-b-[1px] py-2 border-gray-400">
+          <h2 class="text-2xl font-bold">Print Preview</h2>
+          <button @click="closePreview" class="text-2xl font-bold">&times;</button>
         </div>
-        <div class="preview-content">
-          <div v-for="product in selectedProducts" :key="product.id" style="margin-bottom: 2em; text-align: center;">
-            <h3>{{ product.name }}</h3>
-            <img :src="product.image" :alt="product.name" style="max-width: 100%; height: auto;">
-            <p>{{ product.description }}</p>
+        <div v-for="(groupProducts, group) in groupedSelectedProducts" :key="group" class="my-4">
+          <h3 class="text-lg font-bold">{{ group }}</h3>
+          <div v-for="product in groupProducts" :key="product.id" class="space-y-1">
+            <h3 class="text-sm">{{ product.name }}</h3>
+            <!-- <p class="text-gray-600">{{ product.description }}</p> -->
           </div>
         </div>
-        <button class="print-button" @click="printSelected">Confirm and Print</button>
+        <button class="bg-black text-white px-4 py-2 mt-4 rounded hover:bg-gray-800" @click="printSelected">Confirm and
+          Print</button>
       </div>
     </div>
+
   </div>
 
-  <!-- Vue Script -->
+  <!-- Vue 3 Script -->
   <script>
-    new Vue({
-      el: '#app',
-      data: {
-        isSidebarActive: false,
-        showModal: false,
-        selectedProducts: [],
-        products: [
-          {
-            id: 1,
-            name: 'Product 1',
-            description: 'This is a description of product 1.',
-            image: 'https://via.placeholder.com/100x100'
-          },
-          {
-            id: 2,
-            name: 'Product 2',
-            description: 'This is a description of product 2.',
-            image: 'https://via.placeholder.com/100x100'
-          },
-          {
-            id: 3,
-            name: 'Product 3',
-            description: 'This is a description of product 3.',
-            image: 'https://via.placeholder.com/100x100'
-          },
-          {
-            id: 4,
-            name: 'Product 4',
-            description: 'This is a description of product 4.',
-            image: 'https://via.placeholder.com/100x100'
-          }
-          // Add more products as needed
-        ]
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          showModal: false,
+          selectedProducts: [],
+          products: [
+            {
+              "id": 1,
+              "name": "Chicken Chilly Dry",
+              "description": "This is a description of Chicken Chilly Dry.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 2,
+              "name": "Fried Chicken",
+              "description": "This is a description of Fried Chicken.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 3,
+              "name": "Egg Keema Chap",
+              "description": "This is a description of Egg Keema Chap.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 4,
+              "name": "Lemon Chicken",
+              "description": "This is a description of Lemon Chicken.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 5,
+              "name": "Tawa Fish",
+              "description": "This is a description of Tawa Fish.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 6,
+              "name": "Royal Fish",
+              "description": "This is a description of Royal Fish.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 7,
+              "name": "Fish Finger",
+              "description": "This is a description of Fish Finger.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 8,
+              "name": "Mutton Shami Kabab",
+              "description": "This is a description of Mutton Shami Kabab.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "NON VEG SNACKS"
+            },
+            {
+              "id": 9,
+              "name": "Butter Chicken",
+              "description": "This is a description of Butter Chicken.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 10,
+              "name": "Chicken Curry",
+              "description": "This is a description of Chicken Curry.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 11,
+              "name": "Chicken Masala",
+              "description": "This is a description of Chicken Masala.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 12,
+              "name": "Chicken Do Pyaza",
+              "description": "This is a description of Chicken Do Pyaza.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 13,
+              "name": "Chicken Kadhai",
+              "description": "This is a description of Chicken Kadhai.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 14,
+              "name": "Punjabi Chicken",
+              "description": "This is a description of Punjabi Chicken.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 15,
+              "name": "Chicken Handi",
+              "description": "This is a description of Chicken Handi.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 16,
+              "name": "Chicken Kolhapuri",
+              "description": "This is a description of Chicken Kolhapuri.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 17,
+              "name": "Chicken Lababdar",
+              "description": "This is a description of Chicken Lababdar.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "CHICKEN"
+            },
+            {
+              "id": 18,
+              "name": "Mutton Curry",
+              "description": "This is a description of Mutton Curry.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "MUTTON"
+            },
+            {
+              "id": 19,
+              "name": "Mutton Roghan Josh",
+              "description": "This is a description of Mutton Roghan Josh.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "MUTTON"
+            },
+            {
+              "id": 20,
+              "name": "Mutton Masala",
+              "description": "This is a description of Mutton Masala.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "MUTTON"
+            },
+            {
+              "id": 21,
+              "name": "Bhuna Ghost",
+              "description": "This is a description of Bhuna Ghost.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "MUTTON"
+            },
+            {
+              "id": 22,
+              "name": "Mutton Do Pyaza",
+              "description": "This is a description of Mutton Do Pyaza.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "MUTTON"
+            },
+            {
+              "id": 23,
+              "name": "Chicken Biryani",
+              "description": "This is a description of Chicken Biryani.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "BIRYANI"
+            },
+            {
+              "id": 24,
+              "name": "Mat. Biryani",
+              "description": "This is a description of Mat. Biryani.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "BIRYANI"
+            },
+            {
+              "id": 25,
+              "name": "Hydrabadi Biryani",
+              "description": "This is a description of Hydrabadi Biryani.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "BIRYANI"
+            },
+            {
+              "id": 26,
+              "name": "Egg Biryani",
+              "description": "This is a description of Egg Biryani.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "BIRYANI"
+            },
+            {
+              "id": 27,
+              "name": "Nukti Biryani",
+              "description": "This is a description of Nukti Biryani.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "BIRYANI"
+            },
+            {
+              "id": 28,
+              "name": "Cold Drink",
+              "description": "This is a description of Cold Drink.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 29,
+              "name": "Coffee",
+              "description": "This is a description of Coffee.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 30,
+              "name": "Shakes",
+              "description": "This is a description of Shakes.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 31,
+              "name": "Fruit Punch",
+              "description": "This is a description of Fruit Punch.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 32,
+              "name": "Fresh Lime",
+              "description": "This is a description of Fresh Lime.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 33,
+              "name": "Soup",
+              "description": "This is a description of Soup.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "STARTER"
+            },
+            {
+              "id": 34,
+              "name": "Crispy",
+              "description": "This is a description of Crispy.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 35,
+              "name": "Spring Roll",
+              "description": "This is a description of Spring Roll.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 36,
+              "name": "Veg Momo's",
+              "description": "This is a description of Veg Momo's.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 37,
+              "name": "Veg Wanton",
+              "description": "This is a description of Veg Wanton.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 38,
+              "name": "Veg Rangila",
+              "description": "This is a description of Veg Rangila.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 39,
+              "name": "Paneer Chilly Dry",
+              "description": "This is a description of Paneer Chilly Dry.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 40,
+              "name": "Crispy Corn Chilly",
+              "description": "This is a description of Crispy Corn Chilly.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 41,
+              "name": "Haryali Roll",
+              "description": "This is a description of Haryali Roll.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 42,
+              "name": "Shoko Ball",
+              "description": "This is a description of Shoko Ball.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 43,
+              "name": "Veg Stick",
+              "description": "This is a description of Veg Stick.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 44,
+              "name": "Veg Keema Chop",
+              "description": "This is a description of Veg Keema Chop.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 45,
+              "name": "Baby Corn Fritters",
+              "description": "This is a description of Baby Corn Fritters.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            },
+            {
+              "id": 46,
+              "name": "Gobhi Chilly",
+              "description": "This is a description of Gobhi Chilly.",
+              "image": "https://via.placeholder.com/100x100",
+              "group": "VEG SNACKS"
+            }
+          ]
+        };
+      },
+      computed: {
+        groupedProducts() {
+          return this.groupBy(this.products, 'group');
+        },
+        groupedSelectedProducts() {
+          return this.groupBy(this.selectedProducts, 'group');
+        }
       },
       methods: {
-        toggleSidebar() {
-          this.isSidebarActive = !this.isSidebarActive;
-        },
         toggleProduct(product) {
           if (this.selectedProducts.includes(product)) {
             this.selectedProducts = this.selectedProducts.filter(p => p.id !== product.id);
@@ -290,4 +425,36 @@
         printSelected() {
           const printWindow = window.open('', '', 'height=600,width=800');
           printWindow.document.write('<html><head><title>Print Products</title>');
-          printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+          printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">');
+          printWindow.document.write('<style>body { font-family: "Inter", sans-serif; margin: 20px; }');
+          printWindow.document.write('h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }');
+          printWindow.document.write('h2 { font-size: 18px; font-weight: bold; margin-bottom: 10px; }');
+          printWindow.document.write('h3 { font-size: 16px; margin-bottom: 5px; font-weight: normal; }');
+          printWindow.document.write('div { margin-bottom: 10px; }');
+          printWindow.document.write('</style></head><body>');
+
+          Object.entries(this.groupedSelectedProducts).forEach(([group, products]) => {
+            printWindow.document.write(`<h2>${group}</h2>`);
+            products.forEach(product => {
+              printWindow.document.write(`<div><h3>${product.name}</h3></div>`);
+            });
+          });
+
+          printWindow.document.write('</body></html>');
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+          this.closePreview();
+        },
+        groupBy(arr, key) {
+          return arr.reduce((acc, curr) => {
+            (acc[curr[key]] = acc[curr[key]] || []).push(curr);
+            return acc;
+          }, {});
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+
+</html>
